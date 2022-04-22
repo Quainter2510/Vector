@@ -6,7 +6,7 @@ Vector::Vector(const Value* rawArray, const size_t size, float coef) {
         coef = 2;
     }
     _size = size;
-    _capacity = size * coef;
+    _capacity = size;
     _multiplicativeCoef = coef;
     _data = new Value[_capacity];
     for (int i = 0; i < size; i++) {
@@ -16,7 +16,7 @@ Vector::Vector(const Value* rawArray, const size_t size, float coef) {
 
 Vector::Vector(const Vector& other):
         _size(other._size), _multiplicativeCoef(other._multiplicativeCoef),
-        _capacity(other._capacity) {
+        _capacity(other._size) {
     _data = new Value[_capacity];
     for (int i = 0; i < _size; i++) {
         _data[i] = other._data[i];
@@ -29,7 +29,7 @@ Vector& Vector::operator=(const Vector& other) {
     }
     _size = other._size;
     _multiplicativeCoef = other._multiplicativeCoef;
-    _capacity = other._capacity;
+    _capacity = other._size;
     delete[] _data;
     _data = new Value[_capacity];
     for (int i = 0; i < _size; i++) {
@@ -47,9 +47,10 @@ Vector::Vector(Vector&& other) noexcept {
     _size = other._size;
     _multiplicativeCoef = other._multiplicativeCoef;
     _data = other._data;
+    _capacity = other._size;
     other._data = nullptr;
     other._size = 0;
-    other._capacity = 1;
+    other._capacity = 0;
 }
 
 Vector& Vector::operator=(Vector&& other) noexcept {
@@ -60,6 +61,7 @@ Vector& Vector::operator=(Vector&& other) noexcept {
     _size = other._size;
     _multiplicativeCoef = other._multiplicativeCoef;
     _data = other._data;
+    _capacity = other._size;
     other._data = nullptr;
     other._size = 0;
     other._capacity = 1;
@@ -74,10 +76,7 @@ void Vector::insert(const Value* values, size_t size, size_t pos) {
     if (pos > _size) {
         return;
     } // ???
-    Value* copyValue = new Value[size];
-    for (int i = 0; i < size; i++) {
-        copyValue[i] = values[i];
-    }
+
     reserve(_size + size);
     if (_size > 0) {
         for (int i = int(_size); i > pos; i--) {
@@ -85,7 +84,7 @@ void Vector::insert(const Value* values, size_t size, size_t pos) {
         }
     }
     for (int i = 0; i < size; i++) {
-        _data[pos + i] = copyValue[i];
+        _data[pos + i] = values[i];
     }
     _size += size;
 }
@@ -107,8 +106,11 @@ void Vector::pushFront(const Value& value) {
 }
 
 void Vector::erase(size_t pos, size_t count) {
+    if (_size == 0) {
+        throw std::out_of_range("_size == 0");
+    }
     if (pos + count > _size) {
-        count = _size - pos - 1;
+        count = _size - pos;
     }
 
     for (int i = 0; i < _size - pos - count; i++) {
@@ -118,7 +120,7 @@ void Vector::erase(size_t pos, size_t count) {
 }
 
 void Vector::popBack() {
-    _size--;
+    erase(_size - 1);
 }
 
 void Vector::popFront() {
@@ -155,18 +157,24 @@ const Value& Vector::operator[](size_t ind) const {
 }
 
 void Vector::shrinkToFit() {
+    Value* newData = new Value[_size];
+    for (int i = 0; i < _size; i++) {
+        newData[i] = _data[i];
+    }
     _capacity = _size;
+    delete _data;
+    _data = newData;
 }
 
 void Vector::reserve(size_t capacity) {
-    if (capacity < _capacity) {
+    if (capacity <= _capacity) {
         return;
     }
     if (_capacity == 0) {
-        _capacity = 1;
+        _capacity = size_t(_multiplicativeCoef);
     }
-    while (_capacity < capacity) {
-        _capacity *= 2;
+    if (_capacity < capacity) {
+        _capacity = capacity;
     }
     Value* dataTmp = new Value[_capacity];
     for (int i = 0; i < _size; i++) {
