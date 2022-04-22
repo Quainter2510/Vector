@@ -162,7 +162,12 @@ void Vector::reserve(size_t capacity) {
     if (capacity < _capacity) {
         return;
     }
-    _capacity = capacity * _multiplicativeCoef;
+    if (_capacity == 0) {
+        _capacity = 1;
+    }
+    while (_capacity < capacity) {
+        _capacity *= 2;
+    }
     Value* dataTmp = new Value[_capacity];
     for (int i = 0; i < _size; i++) {
         dataTmp[i] = _data[i];
@@ -181,8 +186,9 @@ long long Vector::find(const Value& value) const {
 }
 
 
-Vector::Iterator::Iterator(Value* ptr):
-_ptr(ptr) {}
+Vector::Iterator::Iterator(Value* ptr) {
+    _ptr = ptr;
+}
 
 Value& Vector::Iterator::operator*() {
     return *_ptr;
