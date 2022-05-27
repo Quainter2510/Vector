@@ -50,21 +50,11 @@ Vector::Vector(Vector&& other) noexcept {
     _capacity = other._size;
     other._data = nullptr;
     other._size = 0;
-    other._capacity = 0;
+    other._capacity = 1;
 }
 
 Vector& Vector::operator=(Vector&& other) noexcept {
-    if (this == &other) {
-        return *this;
-    }
-    delete[] _data;
-    _size = other._size;
-    _multiplicativeCoef = other._multiplicativeCoef;
-    _data = other._data;
-    _capacity = other._size;
-    other._data = nullptr;
-    other._size = 0;
-    other._capacity = 1;
+    std::swap(*this, other);
     return *this;
 }
 
@@ -145,7 +135,7 @@ size_t Vector::capacity() const {
 }
 
 double Vector::loadFactor() const {
-    return (double)_size / (double)_capacity;
+    return static_cast<double>(_size) / static_cast<double>(_capacity);
 }
 
 Value& Vector::operator[](size_t ind) {
